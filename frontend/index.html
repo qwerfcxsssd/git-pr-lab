@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="ru">
+<head><meta charset="utf-8"><title>git-pr-lab</title></head>
+<body style="font-family:sans-serif;max-width:600px;margin:40px auto">
+  <h1>Frontend</h1>
+  <p>Ответ бэкенда:</p>
+  <pre id="out">загрузка...</pre>
+  <button onclick="load()">Обновить</button>
+  <script>
+    async function load() {
+      try {
+        const r = await fetch('/api/info');
+        document.getElementById('out').textContent = JSON.stringify(await r.json(), null, 2);
+      } catch (e) {
+        document.getElementById('out').textContent = 'Ошибка: ' + e;
+      }
+    }
+    load();
+  </script>
+</body>
+</html>
