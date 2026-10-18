@@ -1,0 +1,16 @@
+services:
+  backend:
+    build: ./backend
+    image: git-pr-lab-backend:latest
+    expose:
+      - "5000"
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    image: git-pr-lab-frontend:latest
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    restart: unless-stopped

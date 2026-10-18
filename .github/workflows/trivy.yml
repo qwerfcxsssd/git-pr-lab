@@ -1,0 +1,29 @@
+name: Trivy
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  image-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Build images used in Docker Compose
+        run: docker compose build
+
+      - name: Scan backend image
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+            aquasec/trivy:latest image --severity HIGH,CRITICAL --exit-code 0 \
+            git-pr-lab-backend:latest
+
+      - name: Scan frontend image
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+            aquasec/trivy:latest image --severity HIGH,CRITICAL --exit-code 0 \
+            git-pr-lab-frontend:latest
