@@ -1,0 +1,57 @@
+- name: Deploy git-pr-lab with Docker Compose
+  hosts: app
+  become: true
+  vars:
+    app_dir: /opt/git-pr-lab
+
+  tasks:
+    - name: Install Docker and Compose plugin
+      ansible.builtin.apt:
+        name:
+          - docker.io
+          - docker-compose-v2
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Ensure Docker is running
+      ansible.builtin.service:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Create application directory
+      ansible.builtin.file:
+        path: "{{ app_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Copy application files
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/../{{ item }}"
+        dest: "{{ app_dir }}/"
+        mode: preserve
+      loop:
+        - backend
+        - frontend
+        - compose.yaml
+      register: app_files
+
+    - name: Start application with Compose
+      community.docker.docker_compose_v2:
+        project_src: "{{ app_dir }}"
+        state: present
+        build: "{{ 'always' if app_files.changed else 'policy' }}"
+
+    - name: Check that frontend proxies requests to backend
+      ansible.builtin.uri:
+        url: http://localhost:8080/api/info
+        return_content: true
+      register: api
+      retries: 10
+      delay: 3
+      until: api.status == 200
+
+    - name: Show backend response
+      ansible.builtin.debug:
+        var: api.json
