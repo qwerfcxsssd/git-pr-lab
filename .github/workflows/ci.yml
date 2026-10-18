@@ -17,3 +17,13 @@ jobs:
         run: python -m py_compile app.py greet.py
       - name: Run app
         run: python app.py
+
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: TruffleHog scan
+        run: |
+          docker run --rm -v "${{ github.workspace }}:/repo" \
+            trufflesecurity/trufflehog:latest filesystem /repo \
+            --results=verified,unverified --fail --no-update
